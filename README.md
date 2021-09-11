@@ -13,7 +13,7 @@ Source code for "Pack Together: Entity and Relation Extraction with Levitated Ma
 
 
 ## Overview
-![](./figs/overview.png)
+![](./figs/overview.jpg)
 
 In this work, we present a novel span representation approach, named Packed Levitated Markers,  to consider the dependencies between the spans (pairs) by strategically packing the markers in the encoder. Our approach is evaluated on two typical span (pair) representation tasks:
 
