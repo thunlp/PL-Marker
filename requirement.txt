@@ -1,0 +1,4 @@
+torch
+tqdm
+tensorboardX
+seqeval=1.2.2
