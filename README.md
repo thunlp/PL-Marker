@@ -52,9 +52,9 @@ We release our pre-trained NER models and RE models for ACE05 and SciERC dataset
 ## Training Script
 Train NER Models:
 ```
-bash run_train_ner_PLMarker.sh
-bash run_train_ner_BIO.sh
-bash run_train_ner_TokenCat.sh
+bash scripts/run_train_ner_PLMarker.sh
+bash scripts/run_train_ner_BIO.sh
+bash scripts/run_train_ner_TokenCat.sh
 ```
 
 Train RE Models:
