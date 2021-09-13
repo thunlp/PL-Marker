@@ -24,8 +24,8 @@ for seed in 42 43 44 45 46; do
 CUDA_VISIBLE_DEVICES=$GPU_ID  python3  run_ner_BIO.py  --model_type roberta  \
     --model_name_or_path  ../bert_models/roberta-large    \
     --data_dir ontonotes  \
-    --learning_rate 1e-5  --num_train_epochs 8  --per_gpu_train_batch_size  8  --per_gpu_eval_batch_size 16  --gradient_accumulation_steps 1  \
-    --max_seq_length 512  --save_steps 10000  \
+    --learning_rate 1e-5  --num_train_epochs 5  --per_gpu_train_batch_size  8  --per_gpu_eval_batch_size 16  --gradient_accumulation_steps 1  \
+    --max_seq_length 512  --save_steps 5000  \
     --do_train  --do_eval  --evaluate_during_training   --eval_all_checkpoints  \
     --fp16  --seed $seed  \
     --train_file train.json --dev_file dev.json --test_file test.json  \
