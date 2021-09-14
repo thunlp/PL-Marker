@@ -1,5 +1,5 @@
 # PL-Marker
-Source code for "Pack Together: Entity and Relation Extraction with Levitated Marker".
+Source code for [Pack Together: Entity and Relation Extraction with Levitated Marker]](https://arxiv.org/pdf/2109.06067.pdf).
 
 ## Quick links
 * [Overview](#Overview)
@@ -10,6 +10,7 @@ Source code for "Pack Together: Entity and Relation Extraction with Levitated Ma
 * [Training Script](#Training-script)
 * [Quick Start](#Quick-start)
 * [Use TypeMarker](#TypeMarker)
+* [Citation](#Citation)
 
 
 ## Overview
@@ -107,3 +108,15 @@ if we use the flag `--use_typemarker` for the RE models, the results will be:
 
 
 Since the Typemarker increase the performance of SciERC but decrease the performance of ACE05, we didn't use it in the paper.
+
+
+## Citation
+If you use our code in your research, please cite our work:
+```bibtex
+@article{ye2021plmarker,
+  author    = {Deming Ye and Yankai Lin and Maosong Sun},
+  title     = {Pack Together: Entity and Relation Extraction with Levitated Marker},
+  journal   = {arXiv Preprint},
+  year={2021}
+}
+```
