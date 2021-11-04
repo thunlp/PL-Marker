@@ -12,7 +12,7 @@ CUDA_VISIBLE_DEVICES=$GPU_ID  python3  run_re.py  --model_type bertsub  \
     --learning_rate 2e-5  --num_train_epochs 10  --per_gpu_train_batch_size  8  --per_gpu_eval_batch_size 16  --gradient_accumulation_steps 1  \
     --max_seq_length 256  --max_pair_length 32  --save_steps 5000  \
     --do_train  --do_eval  --evaluate_during_training   --eval_all_checkpoints  --eval_logsoftmax  \
-    --fp16  --lminit  --seed $seed  --output_results  \
+    --fp16  --lminit  --seed $seed    \
     --test_file ace05ner_models/PL-Marker-ace05-bert-$seed/ent_pred_test.json  \
     --output_dir ace05re_models/ace05re-bert-$seed  --overwrite_output_dir
 done;
@@ -29,7 +29,7 @@ CUDA_VISIBLE_DEVICES=$GPU_ID  python3  run_re.py  --model_type bertsub  \
     --learning_rate 2e-5  --num_train_epochs 10  --per_gpu_train_batch_size  8  --per_gpu_eval_batch_size 16  --gradient_accumulation_steps 1  \
     --max_seq_length 256  --max_pair_length 16  --save_steps 2500  \
     --do_train  --do_eval  --evaluate_during_training   --eval_all_checkpoints  --eval_logsoftmax  \
-    --fp16  --lminit  --seed $seed  --output_results    \
+    --fp16  --lminit  --seed $seed      \
     --test_file sciner_models/PL-Marker-scierc-scibert-$seed/ent_pred_test.json  \
     --use_ner_results \
     --output_dir scire_models/scire-scibert-$seed  --overwrite_output_dir
