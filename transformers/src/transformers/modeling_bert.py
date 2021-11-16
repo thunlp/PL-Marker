@@ -389,6 +389,10 @@ class BertEncoder(nn.Module):
         self.output_attentions = config.output_attentions
         self.output_hidden_states = config.output_hidden_states
         self.layer = nn.ModuleList([BertLayer(config) for _ in range(config.num_hidden_layers)])
+        try:
+            self.use_full_layer = config.use_full_layer
+        except:
+            self.use_full_layer = -1
 
     def forward(
         self,
@@ -397,10 +401,14 @@ class BertEncoder(nn.Module):
         head_mask=None,
         encoder_hidden_states=None,
         encoder_attention_mask=None,
+        full_attention_mask=None,
     ):
         all_hidden_states = ()
         all_attentions = ()
         for i, layer_module in enumerate(self.layer):
+            if i==self.use_full_layer:
+                attention_mask = full_attention_mask
+
             if self.output_hidden_states:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
@@ -644,6 +652,7 @@ class BertModel(BertPreTrainedModel):
         inputs_embeds=None,
         encoder_hidden_states=None,
         encoder_attention_mask=None,
+        full_attention_mask=None,
     ):
         r"""
     Return:
@@ -726,7 +735,9 @@ class BertModel(BertPreTrainedModel):
                     input_shape, attention_mask.shape
                 )
             )
-
+        if full_attention_mask is not None:
+            if full_attention_mask.dim()==2:
+                full_attention_mask = full_attention_mask[:, None, None, :]
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
         # masked positions, this operation will create a tensor which is 0.0 for
         # positions we want to attend and -10000.0 for masked positions.
@@ -789,6 +800,7 @@ class BertModel(BertPreTrainedModel):
             head_mask=head_mask,
             encoder_hidden_states=encoder_hidden_states,
             encoder_attention_mask=encoder_extended_attention_mask,
+            full_attention_mask=full_attention_mask,
         )
         sequence_output = encoder_outputs[0]
         pooled_output = self.pooler(sequence_output)
@@ -2046,365 +2058,6 @@ class BertForQuestionAnsweringHotpot(BertPreTrainedModel):
 
 
 
-class PositionwiseFeedForward(nn.Module):
-    """ A two-layer Feed-Forward-Network with residual layer norm.
-
-    Args:
-        d_model (int): the size of input for the first-layer of the FFN.
-        d_ff (int): the hidden layer size of the second-layer
-            of the FNN.
-        dropout (float): dropout probability in :math:`[0, 1)`.
-    """
-
-    def __init__(self, d_model, d_ff, dropout=0.1):
-        super(PositionwiseFeedForward, self).__init__()
-        self.w_1 = nn.Linear(d_model, d_ff)
-        self.w_2 = nn.Linear(d_ff, d_model)
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
-        self.actv = gelu
-        self.dropout_1 = nn.Dropout(dropout)
-        self.dropout_2 = nn.Dropout(dropout)
-
-    def forward(self, x):
-        inter = self.dropout_1(self.actv(self.w_1(self.layer_norm(x))))
-        output = self.dropout_2(self.w_2(inter))
-        return output + x
-
-
-class MultiHeadedAttention(nn.Module):
-    """
-    Multi-Head Attention module from
-    "Attention is All You Need"
-    :cite:`DBLP:journals/corr/VaswaniSPUJGKP17`.
-
-    Similar to standard `dot` attention but uses
-    multiple attention distributions simulataneously
-    to select relevant items.
-
-    .. mermaid::
-
-       graph BT
-          A[key]
-          B[value]
-          C[query]
-          O[output]
-          subgraph Attn
-            D[Attn 1]
-            E[Attn 2]
-            F[Attn N]
-          end
-          A --> D
-          C --> D
-          A --> E
-          C --> E
-          A --> F
-          C --> F
-          D --> O
-          E --> O
-          F --> O
-          B --> O
-
-    Also includes several additional tricks.
-
-    Args:
-       head_count (int): number of parallel heads
-       model_dim (int): the dimension of keys/values/queries,
-           must be divisible by head_count
-       dropout (float): dropout parameter
-    """
-
-    def __init__(self, head_count, model_dim, dropout=0.1, use_final_linear=True):
-        assert model_dim % head_count == 0
-        self.dim_per_head = model_dim // head_count
-        self.model_dim = model_dim
-
-        super(MultiHeadedAttention, self).__init__()
-        self.head_count = head_count
-
-        self.linear_keys = nn.Linear(model_dim,
-                                     head_count * self.dim_per_head)
-        self.linear_values = nn.Linear(model_dim,
-                                       head_count * self.dim_per_head)
-        self.linear_query = nn.Linear(model_dim,
-                                      head_count * self.dim_per_head)
-        self.softmax = nn.Softmax(dim=-1)
-        self.dropout = nn.Dropout(dropout)
-        self.use_final_linear = use_final_linear
-        if (self.use_final_linear):
-            self.final_linear = nn.Linear(model_dim, model_dim)
-
-    def forward(self, key, value, query, mask=None,
-                layer_cache=None, type=None, predefined_graph_1=None):
-        """
-        Compute the context vector and the attention vectors.
-
-        Args:
-           key (`FloatTensor`): set of `key_len`
-                key vectors `[batch, key_len, dim]`
-           value (`FloatTensor`): set of `key_len`
-                value vectors `[batch, key_len, dim]`
-           query (`FloatTensor`): set of `query_len`
-                 query vectors  `[batch, query_len, dim]`
-           mask: binary mask indicating which keys have
-                 non-zero attention `[batch, query_len, key_len]`
-        Returns:
-           (`FloatTensor`, `FloatTensor`) :
-
-           * output context vectors `[batch, query_len, dim]`
-           * one of the attention vectors `[batch, query_len, key_len]`
-        """
-
-        # CHECKS
-        # batch, k_len, d = key.size()
-        # batch_, k_len_, d_ = value.size()
-        # aeq(batch, batch_)
-        # aeq(k_len, k_len_)
-        # aeq(d, d_)
-        # batch_, q_len, d_ = query.size()
-        # aeq(batch, batch_)
-        # aeq(d, d_)
-        # aeq(self.model_dim % 8, 0)
-        # if mask is not None:
-        #    batch_, q_len_, k_len_ = mask.size()
-        #    aeq(batch_, batch)
-        #    aeq(k_len_, k_len)
-        #    aeq(q_len_ == q_len)
-        # END CHECKS
-
-        batch_size = key.size(0)
-        dim_per_head = self.dim_per_head
-        head_count = self.head_count
-        key_len = key.size(1)
-        query_len = query.size(1)
-
-        def shape(x):
-            """  projection """
-            return x.view(batch_size, -1, head_count, dim_per_head) \
-                .transpose(1, 2)
-
-        def unshape(x):
-            """  compute context """
-            return x.transpose(1, 2).contiguous() \
-                .view(batch_size, -1, head_count * dim_per_head)
-
-        # 1) Project key, value, and query.
-        if layer_cache is not None:
-            if type == "self":
-                query, key, value = self.linear_query(query), \
-                                    self.linear_keys(query), \
-                                    self.linear_values(query)
-
-                key = shape(key)
-                value = shape(value)
-
-                if layer_cache is not None:
-                    device = key.device
-                    if layer_cache["self_keys"] is not None:
-                        key = torch.cat(
-                            (layer_cache["self_keys"].to(device), key),
-                            dim=2)
-                    if layer_cache["self_values"] is not None:
-                        value = torch.cat(
-                            (layer_cache["self_values"].to(device), value),
-                            dim=2)
-                    layer_cache["self_keys"] = key
-                    layer_cache["self_values"] = value
-            elif type == "context":
-                query = self.linear_query(query)
-                if layer_cache is not None:
-                    if layer_cache["memory_keys"] is None:
-                        key, value = self.linear_keys(key), \
-                                     self.linear_values(value)
-                        key = shape(key)
-                        value = shape(value)
-                    else:
-                        key, value = layer_cache["memory_keys"], \
-                                     layer_cache["memory_values"]
-                    layer_cache["memory_keys"] = key
-                    layer_cache["memory_values"] = value
-                else:
-                    key, value = self.linear_keys(key), \
-                                 self.linear_values(value)
-                    key = shape(key)
-                    value = shape(value)
-        else:
-            key = self.linear_keys(key)
-            value = self.linear_values(value)
-            query = self.linear_query(query)
-            key = shape(key)
-            value = shape(value)
-
-        query = shape(query)
-
-        key_len = key.size(2)
-        query_len = query.size(2)
-
-        # 2) Calculate and scale scores.
-        query = query / math.sqrt(dim_per_head)
-        scores = torch.matmul(query, key.transpose(2, 3))
-
-        if mask is not None:
-            mask = mask.unsqueeze(1).expand_as(scores)
-            scores = scores.masked_fill(mask, -1e18)
-
-        # 3) Apply attention dropout and compute context vectors.
-
-        attn = self.softmax(scores)
-
-        if (not predefined_graph_1 is None):
-            attn_masked = attn[:, -1] * predefined_graph_1
-            attn_masked = attn_masked / (torch.sum(attn_masked, 2).unsqueeze(2) + 1e-9)
-
-            attn = torch.cat([attn[:, :-1], attn_masked.unsqueeze(1)], 1)
-
-        drop_attn = self.dropout(attn)
-        if (self.use_final_linear):
-            context = unshape(torch.matmul(drop_attn, value))
-            output = self.final_linear(context)
-            return output
-        else:
-            context = torch.matmul(drop_attn, value)
-            return context
-
-class PositionalEncoding(nn.Module):
-
-    def __init__(self, dropout, dim, max_len=5000):
-        pe = torch.zeros(max_len, dim)
-        position = torch.arange(0, max_len).unsqueeze(1)
-        div_term = torch.exp((torch.arange(0, dim, 2, dtype=torch.float) *
-                              -(math.log(10000.0) / dim)))
-        pe[:, 0::2] = torch.sin(position.float() * div_term)
-        pe[:, 1::2] = torch.cos(position.float() * div_term)
-        pe = pe.unsqueeze(0)
-        super(PositionalEncoding, self).__init__()
-        self.register_buffer('pe', pe)
-        self.dropout = nn.Dropout(p=dropout)
-        self.dim = dim
-
-    def forward(self, emb, step=None):
-        emb = emb * math.sqrt(self.dim)
-        if (step):
-            emb = emb + self.pe[:, step][:, None, :]
-
-        else:
-            emb = emb + self.pe[:, :emb.size(1)]
-        emb = self.dropout(emb)
-        return emb
-
-    def get_emb(self, emb):
-        return self.pe[:, :emb.size(1)]
-
-class TransformerEncoderLayer(nn.Module):
-    def __init__(self, d_model, heads, d_ff, dropout):
-        super(TransformerEncoderLayer, self).__init__()
-
-        self.self_attn = MultiHeadedAttention(
-            heads, d_model, dropout=dropout)
-        self.feed_forward = PositionwiseFeedForward(d_model, d_ff, dropout)
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
-        self.dropout = nn.Dropout(dropout)
-
-    def forward(self, iter, query, inputs, mask):
-        if (iter != 0):
-            input_norm = self.layer_norm(inputs)
-        else:
-            input_norm = inputs
-
-        mask = mask.unsqueeze(1)
-        context = self.self_attn(input_norm, input_norm, input_norm,
-                                 mask=mask)
-        out = self.dropout(context) + inputs
-        return self.feed_forward(out)
-
-
-class ExtTransformerEncoder(nn.Module):
-    def __init__(self, d_model, d_ff, heads, dropout, num_inter_layers=0):
-        super(ExtTransformerEncoder, self).__init__()
-        self.d_model = d_model
-        self.num_inter_layers = num_inter_layers
-        self.pos_emb = PositionalEncoding(dropout, d_model)
-        self.transformer_inter = nn.ModuleList(
-            [TransformerEncoderLayer(d_model, heads, d_ff, dropout)
-             for _ in range(num_inter_layers)])
-        self.dropout = nn.Dropout(dropout)
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
-        self.wo = nn.Linear(d_model, 1, bias=True)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, top_vecs, mask):
-        """ See :obj:`EncoderBase.forward()`"""
-
-        batch_size, n_sents = top_vecs.size(0), top_vecs.size(1)
-        pos_emb = self.pos_emb.pe[:, :n_sents]
-        x = top_vecs * mask[:, :, None].float()
-        x = x + pos_emb
-
-        for i in range(self.num_inter_layers):
-            x = self.transformer_inter[i](i, x, x, ~mask)  # all_sents * max_tokens * dim
-
-        x = self.layer_norm(x)
-        sent_scores = self.sigmoid(self.wo(x))
-        sent_scores = sent_scores.squeeze(-1) * mask.float()
-
-        return sent_scores
-
-
-class BertForSummary(BertPreTrainedModel):
-    def __init__(self, config):
-        super().__init__(config)
-        self.num_labels = config.num_labels
-
-        self.bert = BertModel(config)
-
-        self.ext_layer = ExtTransformerEncoder(config.hidden_size, 2048, 8, 0.2, 2)
-
-        self.init_weights()
-
-    @add_start_docstrings_to_callable(BERT_INPUTS_DOCSTRING)
-    def forward(
-        self,
-        input_ids=None,
-        attention_mask=None,
-        token_type_ids=None,
-        position_ids=None,
-        head_mask=None,
-        inputs_embeds=None,
-        clss=None,
-        src_sent_labels=None
-    ):
-     
-        outputs = self.bert(
-            input_ids,
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
-            position_ids=position_ids,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
-        )
-    
-        sequence_output = outputs[0]
-        bsz = sequence_output.shape[0]
-        sents_vec = sequence_output[torch.arange(bsz).unsqueeze(-1) , clss]
- 
-        if src_sent_labels is  None:
-            return sents_vec
-
-        mask_cls = (src_sent_labels>=0)
-
-        sents_vec = sents_vec * mask_cls.to(sequence_output).unsqueeze(-1)
-        sent_scores = self.ext_layer(sents_vec, mask_cls).squeeze(-1)
-        loss_fct = torch.nn.BCELoss(reduction='none')
-        
-        loss = loss_fct(sent_scores  , src_sent_labels.to(sent_scores)    ) 
-        mask_cls = mask_cls.to(sequence_output)
-        loss = loss * mask_cls
-
-        loss = torch.sum(loss, dim=-1) / torch.sum(mask_cls, dim=-1)
-
-        loss = torch.mean(loss)
-
-        return (loss, sent_scores) + outputs[2:]  
-
 
 class BertForACEBothSub(BertPreTrainedModel):
     def __init__(self, config):
@@ -2640,6 +2293,85 @@ class BertForACEBothOneDropoutSub(BertPreTrainedModel):
 
             loss = re_loss + ner_loss
             outputs = (loss, re_loss, ner_loss) + outputs
+
+        return outputs  # (masked_lm_loss), prediction_scores, (hidden_states), (attentions)
+
+
+
+
+class BertForACEBothOneDropoutLeviPair(BertPreTrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+        self.max_seq_length = config.max_seq_length
+        self.num_labels = config.num_labels
+        self.num_ner_labels = config.num_ner_labels
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+        self.ner_classifier = nn.Linear(config.hidden_size*2, self.num_ner_labels)
+
+        self.re_classifier = nn.Linear(config.hidden_size*4, self.num_labels)
+
+        self.alpha = torch.tensor([config.alpha] + [1.0] * (self.num_labels-1), dtype=torch.float32)
+
+        self.init_weights()
+
+    def forward(
+        self,
+        input_ids=None,
+        attention_mask=None,
+        mentions=None,
+        token_type_ids=None,
+        position_ids=None,
+        head_mask=None,
+        inputs_embeds=None,
+        sub_positions=None,
+        labels=None,
+        m1_ner_labels=None,
+        m2_ner_labels=None,
+    ):
+        
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+        )
+        hidden_states = outputs[0]
+        hidden_states = self.dropout(hidden_states)
+        seq_len = self.max_seq_length
+        bsz, tot_seq_len = input_ids.shape
+        ent_len = (tot_seq_len-seq_len) // 4
+
+        e1_hidden_states = hidden_states[:, seq_len:seq_len+ent_len]
+        e2_hidden_states = hidden_states[:, seq_len+ent_len*1: seq_len+ent_len*2]
+        e3_hidden_states = hidden_states[:, seq_len+ent_len*2: seq_len+ent_len*3]
+        e4_hidden_states = hidden_states[:, seq_len+ent_len*3: seq_len+ent_len*4]
+
+        m1_feature_vector = torch.cat([e1_hidden_states, e2_hidden_states], dim=2)
+        m2_feature_vector = torch.cat([e3_hidden_states, e4_hidden_states], dim=2)
+        feature_vector = torch.cat([m1_feature_vector, m2_feature_vector], dim=2)
+
+        m1_ner_prediction_scores = self.ner_classifier(m1_feature_vector)
+        m2_ner_prediction_scores = self.ner_classifier(m2_feature_vector)
+
+
+        re_prediction_scores = self.re_classifier(feature_vector) # bsz, ent_len, num_label
+
+        outputs = (re_prediction_scores, m1_ner_prediction_scores, m2_ner_prediction_scores) + outputs[2:]  # Add hidden states and attention if they are here
+
+        if labels is not None:
+            loss_fct_re = CrossEntropyLoss(ignore_index=-1,  weight=self.alpha.to(re_prediction_scores))
+            loss_fct_ner = CrossEntropyLoss(ignore_index=-1)
+            re_loss = loss_fct_re(re_prediction_scores.view(-1, self.num_labels), labels.view(-1))
+            m1_ner_loss = loss_fct_ner(m1_ner_prediction_scores.view(-1, self.num_ner_labels), m1_ner_labels.view(-1))
+            m2_ner_loss = loss_fct_ner(m2_ner_prediction_scores.view(-1, self.num_ner_labels), m2_ner_labels.view(-1))
+
+            loss = re_loss + m1_ner_loss + m2_ner_loss
+            outputs = (loss, re_loss, m1_ner_loss+m2_ner_loss) + outputs
 
         return outputs  # (masked_lm_loss), prediction_scores, (hidden_states), (attentions)
 
@@ -3506,6 +3238,7 @@ class BertForSpanMarkerNER(BertPreTrainedModel):
         inputs_embeds=None,
         labels=None,
         mention_pos=None,
+        full_attention_mask=None,
     ):
         
         outputs = self.bert(
@@ -3515,6 +3248,7 @@ class BertForSpanMarkerNER(BertPreTrainedModel):
             position_ids=position_ids,
             head_mask=head_mask,
             inputs_embeds=inputs_embeds,
+            full_attention_mask=full_attention_mask,
         )
         hidden_states = outputs[0]
         if self.onedropout:
@@ -3546,6 +3280,91 @@ class BertForSpanMarkerNER(BertPreTrainedModel):
 
         return outputs   
 
+
+
+class BertForSpanMarkerBiNER(BertPreTrainedModel):
+    def __init__(self, config):
+        super().__init__(config)
+        self.max_seq_length = config.max_seq_length
+        self.num_labels = config.num_labels
+
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+        self.ner_classifier = nn.Linear(config.hidden_size*4, self.num_labels)
+
+        self.alpha = torch.tensor([config.alpha] + [1.0] * (self.num_labels-1), dtype=torch.float32)
+        self.onedropout = config.onedropout
+        self.reduce_dim = nn.Linear(config.hidden_size*2, config.hidden_size)
+        self.blinear = nn.Bilinear(config.hidden_size, config.hidden_size, self.num_labels)
+        self.init_weights()
+
+    def forward(
+        self,
+        input_ids=None,
+        attention_mask=None,
+        mentions=None,
+        token_type_ids=None,
+        position_ids=None,
+        head_mask=None,
+        inputs_embeds=None,
+        labels=None,
+        mention_pos=None,
+        full_attention_mask=None,
+    ):
+        
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+            full_attention_mask=full_attention_mask,
+        )
+        hidden_states = outputs[0]
+        if self.onedropout:
+            hidden_states = self.dropout(hidden_states)
+
+        seq_len = self.max_seq_length
+        bsz, tot_seq_len = input_ids.shape
+        ent_len = (tot_seq_len-seq_len) // 2
+
+        e1_hidden_states = hidden_states[:, seq_len:seq_len+ent_len]
+        e2_hidden_states = hidden_states[:, seq_len+ent_len: ]
+
+
+        m1_start_states = hidden_states[torch.arange(bsz).unsqueeze(-1), mention_pos[:, :, 0]]
+        m1_end_states = hidden_states[torch.arange(bsz).unsqueeze(-1), mention_pos[:, :, 1]]
+
+        m1 = torch.cat([e1_hidden_states, m1_start_states], dim=2)
+        m2 = torch.cat([e2_hidden_states, m1_end_states], dim=2)
+        
+        feature_vector = torch.cat([m1, m2], dim=2)
+        if not self.onedropout:
+            feature_vector = self.dropout(feature_vector)
+        ner_prediction_scores = self.ner_classifier(feature_vector)
+
+        # m1 = self.dropout(self.reduce_dim(m1))
+        # m2 = self.dropout(self.reduce_dim(m2))
+
+        m1 = F.gelu(self.reduce_dim(m1))
+        m2 = F.gelu(self.reduce_dim(m2))
+
+
+        ner_prediction_scores_bilinear = self.blinear(m1, m2)
+
+        ner_prediction_scores = ner_prediction_scores + ner_prediction_scores_bilinear
+
+        outputs = (ner_prediction_scores, ) + outputs[2:]  # Add hidden states and attention if they are here
+
+        if labels is not None:
+            loss_fct_ner = CrossEntropyLoss(ignore_index=-1,  weight=self.alpha.to(ner_prediction_scores))
+            ner_loss = loss_fct_ner(ner_prediction_scores.view(-1, self.num_labels), labels.view(-1))
+            outputs = (ner_loss, ) + outputs
+
+        return outputs   
 
 class BertLMPredictionHeadTransform(nn.Module):
     def __init__(self, config):

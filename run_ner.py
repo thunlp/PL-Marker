@@ -181,7 +181,7 @@ class CoNLL03Dataset(Dataset):
         maxR = 0
         tot_example_index = 0
 
-        for example_index, (words, labels, sentence_boundaries) in enumerate(self.data_info):
+        for example_index, (words, labels, sentence_boundaries) in tqdm(enumerate(self.data_info)):
             tokens = [tokenize_word(w) for w in words]
             subwords = [w for li in tokens for w in li]
 
@@ -280,16 +280,55 @@ class CoNLL03Dataset(Dataset):
                 maxR = max(maxR, len(entity_infos))
                 dL = self.max_pair_length 
                 tot_example_index += 1
-                for i in range(0, len(entity_infos), dL):
-                    examples = entity_infos[i : i + dL]
+                if self.args.shuffle:
+                    random.shuffle(entity_infos)
+                if self.args.group_sort:
+                    group_axis = np.random.randint(2)
+                    sort_dir = bool(np.random.randint(2))
+                    entity_infos.sort(key=lambda x: (x[0][group_axis], x[0][1-group_axis]), reverse=sort_dir)
 
-                    item = {
-                        'sentence': target_tokens,
-                        'examples': examples,
-                        'example_index': (example_index, n),
-                    }                
+                if not self.args.group_edge:
+                    for i in range(0, len(entity_infos), dL):
+                        examples = entity_infos[i : i + dL]
 
-                    self.data.append(item)
+                        item = {
+                            'sentence': target_tokens,
+                            'examples': examples,
+                            'example_index': (example_index, n),
+                        }                
+
+                        self.data.append(item)
+                else:
+                    if self.args.group_axis==-1:
+                        group_axis = np.random.randint(2)
+                    else:
+                        group_axis = self.args.group_axis
+                    sort_dir = bool(np.random.randint(2))
+                    entity_infos.sort(key=lambda x: (x[0][group_axis], x[0][1-group_axis]), reverse=sort_dir)
+                    _start = 0 
+                    while _start < len(entity_infos):
+                        _end = _start+dL
+                        if _end >= len(entity_infos):
+                            _end = len(entity_infos)
+                        else:
+                            while  entity_infos[_end-1][0][group_axis]==entity_infos[_end][0][group_axis] and _end > _start:
+                                _end -= 1
+                            if _start == _end:
+                                _end = _start+dL
+
+                        examples = entity_infos[_start: _end]
+
+                        item = {
+                            'sentence': target_tokens,
+                            'examples': examples,
+                            'example_index': (example_index, n),
+                        }                
+
+                        self.data.append(item)   
+                        _start = _end                 
+
+
+
         print ('maxR:', maxR)
 
     def __len__(self):
@@ -325,6 +364,7 @@ class CoNLL03Dataset(Dataset):
         mentions = []
         mention_pos = []
         num_pair = self.max_pair_length
+        full_attention_mask = [1] * L + [0] * (self.max_seq_length - L) + [0] * (self.max_pair_length)*2
 
         for x_idx, x in enumerate(entry['examples']):
             m1 = x[0]
@@ -345,6 +385,7 @@ class CoNLL03Dataset(Dataset):
             position_ids[w2] = m1[1] + position_plus_pad
 
             for xx in [w1, w2]:
+                full_attention_mask[xx] = 1
                 for yy in [w1, w2]:
                     attention_mask[xx, yy] = 1
                 attention_mask[xx, :L] = 1
@@ -358,6 +399,7 @@ class CoNLL03Dataset(Dataset):
                 torch.tensor(position_ids),
                 torch.tensor(labels, dtype=torch.int64),
                 torch.tensor(mention_pos),
+                torch.tensor(full_attention_mask)
         ]       
 
         if self.evaluate:
@@ -575,15 +617,53 @@ class FewNERDataset(Dataset):
                 maxR = max(maxR, len(entity_infos))
                 dL = self.max_pair_length 
                 tot_example_index += 1
-                for i in range(0, len(entity_infos), dL):
-                    examples = entity_infos[i : i + dL]
-                    item = {
-                        'sentence': target_tokens,
-                        'examples': examples,
-                        'example_index': (example_index, n),
-                    }                
+                if self.args.shuffle:
+                    random.shuffle(entity_infos)
+                if self.args.group_sort:
+                    group_axis = np.random.randint(2)
+                    sort_dir = bool(np.random.randint(2))
+                    entity_infos.sort(key=lambda x: (x[0][group_axis], x[0][1-group_axis]), reverse=sort_dir)
 
-                    self.data.append(item)
+                if not self.args.group_edge:
+                    for i in range(0, len(entity_infos), dL):
+                        examples = entity_infos[i : i + dL]
+
+                        item = {
+                            'sentence': target_tokens,
+                            'examples': examples,
+                            'example_index': (example_index, n),
+                        }                
+
+                        self.data.append(item)
+                else:
+                    if self.args.group_axis==-1:
+                        group_axis = np.random.randint(2)
+                    else:
+                        group_axis = self.args.group_axis
+                    sort_dir = bool(np.random.randint(2))
+                    entity_infos.sort(key=lambda x: (x[0][group_axis], x[0][1-group_axis]), reverse=sort_dir)
+                    _start = 0 
+                    while _start < len(entity_infos):
+                        _end = _start+dL
+                        if _end >= len(entity_infos):
+                            _end = len(entity_infos)
+                        else:
+                            while  entity_infos[_end-1][0][group_axis]==entity_infos[_end][0][group_axis] and _end > _start:
+                                _end -= 1
+                            if _start == _end:
+                                _end = _start+dL
+
+                        examples = entity_infos[_start: _end]
+
+                        item = {
+                            'sentence': target_tokens,
+                            'examples': examples,
+                            'example_index': (example_index, n),
+                        }                
+
+                        self.data.append(item)   
+                        _start = _end                 
+
         logger.info('maxR: %d', maxR)    
 
     def __len__(self):
@@ -616,6 +696,8 @@ class FewNERDataset(Dataset):
         mentions = []
         mention_pos = []
         num_pair = self.max_pair_length
+        
+        full_attention_mask = [1] * L + [0] * (self.max_seq_length - L) + [0] * (self.max_pair_length)*2
 
         for x_idx, x in enumerate(entry['examples']):
             m1 = x[0]
@@ -636,6 +718,7 @@ class FewNERDataset(Dataset):
             position_ids[w2] = m1[1] + position_plus_pad
 
             for xx in [w1, w2]:
+                full_attention_mask[xx] = 1
                 for yy in [w1, w2]:
                     attention_mask[xx, yy] = 1
                 attention_mask[xx, :L] = 1
@@ -649,6 +732,7 @@ class FewNERDataset(Dataset):
                 torch.tensor(position_ids),
                 torch.tensor(labels, dtype=torch.int64),
                 torch.tensor(mention_pos),
+                torch.tensor(full_attention_mask)
         ]       
 
         if self.evaluate:
@@ -779,6 +863,11 @@ def train(args, model, tokenizer):
     best_f1 = 0
 
     for _ in train_iterator:
+        # if _ > 0 and (args.shuffle or args.group_edge or args.group_sort):  
+        #     train_dataset.initialize()
+        #     if args.group_edge:
+        #         train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
+        #         train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size, num_workers=2*int(args.output_dir.find('test')==-1))
 
         epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0])
         for step, batch in enumerate(epoch_iterator):
@@ -791,7 +880,8 @@ def train(args, model, tokenizer):
                       }
             if args.model_type.find('span')!=-1:
                 inputs['mention_pos'] = batch[4]
-
+            if args.use_full_layer!=-1:
+                inputs['full_attention_mask']= batch[5]
             outputs = model(**inputs)
             loss = outputs[0]  # model outputs are always tuple in pytorch-transformers (see doc)
 
@@ -841,6 +931,7 @@ def train(args, model, tokenizer):
                     if update:
                         checkpoint_prefix = 'checkpoint'
                         output_dir = os.path.join(args.output_dir, '{}-{}'.format(checkpoint_prefix, global_step))
+
                         if not os.path.exists(output_dir):
                             os.makedirs(output_dir)
                         model_to_save = model.module if hasattr(model, 'module') else model  # Take care of distributed/parallel training
@@ -910,7 +1001,8 @@ def evaluate(args, model, tokenizer, prefix="", do_test=False):
                       }
             if args.model_type.find('span')!=-1:
                 inputs['mention_pos'] = batch[4]
-
+            if args.use_full_layer!=-1:
+                inputs['full_attention_mask']= batch[5]
             outputs = model(**inputs)
 
             logits = outputs[0]
@@ -1100,7 +1192,11 @@ def main():
     parser.add_argument('--cands_from_BIO', action='store_true')
     parser.add_argument('--eval_on_cands', action='store_true')
     parser.add_argument('--output_candidates', action='store_true')
-
+    parser.add_argument('--use_full_layer', type=int, default=-1,  help="")
+    parser.add_argument('--shuffle', action='store_true')
+    parser.add_argument('--group_edge', action='store_true')
+    parser.add_argument('--group_axis', type=int, default=-1,  help="")
+    parser.add_argument('--group_sort', action='store_true')
 
     args = parser.parse_args()
  
@@ -1175,6 +1271,7 @@ def main():
     config.max_seq_length = args.max_seq_length
     config.alpha = args.alpha
     config.onedropout = args.onedropout
+    config.use_full_layer = args.use_full_layer
 
     model = model_class.from_pretrained(args.model_name_or_path, from_tf=bool('.ckpt' in args.model_name_or_path), config=config)
 
@@ -1270,6 +1367,7 @@ def main():
 
         if update:
             checkpoint_prefix = 'checkpoint'
+
             output_dir = os.path.join(args.output_dir, '{}-{}'.format(checkpoint_prefix, global_step))
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)

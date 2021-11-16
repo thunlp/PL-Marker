@@ -172,6 +172,7 @@ if is_torch_available():
         BertForNER,
         BertForSpanNER,
         BertForSpanMarkerNER,
+        BertForSpanMarkerBiNER,
         BertForEvent,
         BertForEventArg,
         BertForMarkerSEQA,
@@ -182,7 +183,8 @@ if is_torch_available():
         BertForTACRED,
         BertForACEBothOneDropoutNERSub,
         BertForACEBothOneDropout,
-        BertForACEBothOneDropoutSubNoNer
+        BertForACEBothOneDropoutSubNoNer,
+        BertForACEBothOneDropoutLeviPair
     )
     
     
