@@ -99,7 +99,7 @@ def prosess(prefix):
         output_w.write(json.dumps(item)+'\n')
     print (prefix, 'skip doc:', skip_doc)
 
-data_dir = './ontonotes_wopt/'
+data_dir = 'ontonotes/'
 prosess(data_dir + 'dev')
 prosess(data_dir + 'test')
 prosess(data_dir + 'train')
