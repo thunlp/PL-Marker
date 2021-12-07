@@ -38,9 +38,11 @@ def prosess(prefix):
             else:
                 documents[-1][1].append(line)
 
-    output_w = open(prefix + '.jsonl', 'w')
+    output_w = open(prefix + '.json', 'w')
+    skip_doc = 0
     for document_lines in documents:
         doc_key = document_lines[0]
+
         sents = []
         ners = []
         sent = []
@@ -80,16 +82,24 @@ def prosess(prefix):
 
             sent.append(word)
             word_idx += 1
-        assert(len(sent)==0)
 
-       item = {'sentences': sents,
+        if doc_key.startswith('pt/'):
+            tot_ner = 0
+            for ner in ners:
+                tot_ner += len(ner)
+            assert(tot_ner == 0)
+            skip_doc += 1
+            continue
+
+        item = {'sentences': sents,
                 'ner': ners,
                 'doc_key': doc_key
             }
 
         output_w.write(json.dumps(item)+'\n')
+    print (prefix, 'skip doc:', skip_doc)
 
-data_dir = 'ontonotes/'
+data_dir = './ontonotes_wopt/'
 prosess(data_dir + 'dev')
 prosess(data_dir + 'test')
 prosess(data_dir + 'train')

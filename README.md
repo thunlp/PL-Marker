@@ -51,6 +51,30 @@ We release our pre-trained NER models and RE models for ACE05 and SciERC dataset
 *Note*: the performance of the pre-trained models might be slightly different from the reported numbers in the paper, since we reported the average numbers based on multiple runs.
 
 ## Training Script
+Download Pre-trained Language Models from [Hugging Face](https://huggingface.co/): 
+```
+mkdir -p bert_models/bert-base-uncased
+wget -P bert_models/bert-base-uncased https://huggingface.co/bert-base-uncased/resolve/main/pytorch_model.bin
+wget -P bert_models/bert-base-uncased https://huggingface.co/bert-base-uncased/resolve/main/vocab.txt
+wget -P bert_models/bert-base-uncased https://huggingface.co/bert-base-uncased/resolve/main/config.json
+
+mkdir -p bert_models/roberta-large
+wget -P bert_models/roberta-large https://huggingface.co/roberta-large/resolve/main/pytorch_model.bin
+wget -P bert_models/roberta-large https://huggingface.co/roberta-large/resolve/main/merges.txt
+wget -P bert_models/roberta-large https://huggingface.co/roberta-large/resolve/main/vocab.json
+wget -P bert_models/roberta-large https://huggingface.co/roberta-large/resolve/main/config.json
+
+mkdir -p bert_models/albert-xxlarge-v1
+wget -P bert_models/albert-xxlarge-v1 https://huggingface.co/albert-xxlarge-v1/resolve/main/pytorch_model.bin
+wget -P bert_models/albert-xxlarge-v1 https://huggingface.co/albert-xxlarge-v1/resolve/main/spiece.model
+wget -P bert_models/albert-xxlarge-v1 https://huggingface.co/albert-xxlarge-v1/resolve/main/config.json
+
+mkdir -p bert_models/scibert_scivocab_uncased
+wget -P bert_models/scibert_scivocab_uncased https://huggingface.co/allenai/scibert_scivocab_uncased/resolve/main/pytorch_model.bin
+wget -P bert_models/scibert_scivocab_uncased https://huggingface.co/allenai/scibert_scivocab_uncased/resolve/main/vocab.txt
+wget -P bert_models/scibert_scivocab_uncased https://huggingface.co/allenai/scibert_scivocab_uncased/resolve/main/config.json
+```
+
 Train NER Models:
 ```
 bash scripts/run_train_ner_PLMarker.sh

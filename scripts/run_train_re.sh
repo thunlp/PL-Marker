@@ -7,7 +7,7 @@ GPU_ID=0
 mkdir ace05re_models
 for seed in 42 43 44 45 46; do 
 CUDA_VISIBLE_DEVICES=$GPU_ID  python3  run_re.py  --model_type bertsub  \
-    --model_name_or_path  ../bert_models/bert-base-uncased  --do_lower_case  \
+    --model_name_or_path  bert_models/bert-base-uncased  --do_lower_case  \
     --data_dir ace05  \
     --learning_rate 2e-5  --num_train_epochs 10  --per_gpu_train_batch_size  8  --per_gpu_eval_batch_size 16  --gradient_accumulation_steps 1  \
     --max_seq_length 256  --max_pair_length 32  --save_steps 5000  \
@@ -24,7 +24,7 @@ python3 sumup.py ace05re ace05re-bert
 mkdir scire_models
 for seed in 42 43 44 45 46; do 
 CUDA_VISIBLE_DEVICES=$GPU_ID  python3  run_re.py  --model_type bertsub  \
-    --model_name_or_path  ../bert_models/scibert-uncased  --do_lower_case  \
+    --model_name_or_path  bert_models/scibert-uncased  --do_lower_case  \
     --data_dir scierc  \
     --learning_rate 2e-5  --num_train_epochs 10  --per_gpu_train_batch_size  8  --per_gpu_eval_batch_size 16  --gradient_accumulation_steps 1  \
     --max_seq_length 256  --max_pair_length 16  --save_steps 2500  \
@@ -42,7 +42,7 @@ python3 sumup.py scire scire-bert
 mkdir ace04re_models
 for data_spilt in 0 1 2 3 4; do 
 CUDA_VISIBLE_DEVICES=$GPU_ID  python3  run_re.py  --model_type bertsub  \
-    --model_name_or_path  ../bert_models/bert-base-uncased  --do_lower_case  \
+    --model_name_or_path  bert_models/bert-base-uncased  --do_lower_case  \
     --data_dir ace04  \
     --learning_rate 2e-5  --num_train_epochs 10  --per_gpu_train_batch_size  8  --per_gpu_eval_batch_size 16  --gradient_accumulation_steps 1  \
     --max_seq_length 384  --max_pair_length 40  --save_steps 2500  \
