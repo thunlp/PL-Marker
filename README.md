@@ -38,7 +38,7 @@ pip3 install --editable transformers
 
 ### Download and preprocess the datasets
 Our experiments are based on three datasets: ACE04, ACE05, and SciERC. Please find the links and pre-processing below:
-* CoNLL03: We use the Enlish part of [CoNLL03](https://www.clips.uantwerpen.be/conll2003/ner/)
+* CoNLL03: We use the Enlish part of CoNLL03 from [Google Drive](https://drive.google.com/drive/folders/1ZxytgzPLTA7ge9sX-JgIoIZj7kUCdh9h?usp=sharing)/[Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/8885dca5b3b442e1834a/).
 * OntoNotes: We use `preprocess_ontonotes.py`  to preprocess the [OntoNote 5.0](https://catalog.ldc.upenn.edu/LDC2013T19).
 * Few-NERD: The dataseet can be downloaed in their [website](https://ningding97.github.io/fewnerd/)
 * ACE04/ACE05: We use the preprocessing code from [DyGIE repo](https://github.com/luanyi/DyGIE/tree/master/preprocessing). Please follow the instructions to preprocess the ACE05 and ACE04 datasets.
