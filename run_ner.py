@@ -1408,10 +1408,11 @@ def main():
             result = dict((k + '_{}'.format(global_step), v) for k, v in result.items())
             results.update(result)
 
-            print (results)
-            output_eval_file = os.path.join(args.output_dir, "results.json")
-            json.dump(results, open(output_eval_file, "w"))
+    if args.local_rank in [-1, 0]:
+        print (results)
 
+        output_eval_file = os.path.join(args.output_dir, "results.json")
+        json.dump(results, open(output_eval_file, "w"))
 
 if __name__ == "__main__":
     main()

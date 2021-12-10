@@ -46,7 +46,7 @@ Our experiments are based on three datasets: ACE04, ACE05, and SciERC. Please fi
 
 
 ### Pre-trained Models
-We release our pre-trained NER models and RE models for ACE05 and SciERC datasets on [Google Drive](https://drive.google.com/drive/folders/1k_Nt_DeKRKIRd2sM766j538b1JhYm4-H?usp=sharing)/[Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/).
+We release our pre-trained NER models and RE models on ACE05 and SciERC datasets on [Google Drive](https://drive.google.com/drive/folders/1k_Nt_DeKRKIRd2sM766j538b1JhYm4-H?usp=sharing)/[Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/). And we release our pre-trained models on flat NER datasets on  [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/).
 
 *Note*: the performance of the pre-trained models might be slightly different from the reported numbers in the paper, since we reported the average numbers based on multiple runs.
 
