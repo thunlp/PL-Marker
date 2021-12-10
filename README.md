@@ -6,7 +6,7 @@ Source code for [Pack Together: Entity and Relation Extraction with Levitated Ma
 * [Setup](#Setup)
   * [Install Dependencies](#Install-dependencies)
   * [Data Preprocessing](#Download-and-preprocess-the-datasets)
-  * [Pre-trained Models](#Pre-trained-Models)
+  * [Trained Models](#Trained-Models)
 * [Training Script](#Training-script)
 * [Quick Start](#Quick-start)
 * [Use TypeMarker](#TypeMarker)
@@ -45,10 +45,10 @@ Our experiments are based on three datasets: ACE04, ACE05, and SciERC. Please fi
 * SciERC: The preprocessed SciERC dataset can be downloaded in their project [website](http://nlp.cs.washington.edu/sciIE/data/sciERC_processed.tar.gz).
 
 
-### Pre-trained Models
-We release our pre-trained NER models and RE models on ACE05 and SciERC datasets on [Google Drive](https://drive.google.com/drive/folders/1k_Nt_DeKRKIRd2sM766j538b1JhYm4-H?usp=sharing)/[Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/). And we release our pre-trained models on flat NER datasets on  [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/).
+### Trained Models
+We release our trained NER models and RE models on ACE05 and SciERC datasets on [Google Drive](https://drive.google.com/drive/folders/1k_Nt_DeKRKIRd2sM766j538b1JhYm4-H?usp=sharing)/[Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/). And we release our trained models on flat NER datasets on  [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/).
 
-*Note*: the performance of the pre-trained models might be slightly different from the reported numbers in the paper, since we reported the average numbers based on multiple runs.
+*Note*: the performance of the models might be slightly different from the reported numbers in the paper, since we reported the average numbers based on multiple runs.
 
 ## Training Script
 Download Pre-trained Language Models from [Hugging Face](https://huggingface.co/): 
