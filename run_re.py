@@ -275,7 +275,10 @@ class ACEDataset(Dataset):
                 for x in sentence_relations:
                     w = (x[2],x[3],x[0],x[1])
                     if w not in pos2label:
-                        pos2label[w] = label_map[x[4]] + len(label_map) - len(self.sym_labels)
+                        if x[4] in self.sym_labels[1:]:
+                            pos2label[w] = label_map[x[4]]  # bug
+                        else:
+                            pos2label[w] = label_map[x[4]] + len(label_map) - len(self.sym_labels)
 
                 if not self.evaluate:
                     entities.append((10000, 10000, 'NIL')) # only for NER
@@ -774,8 +777,9 @@ def evaluate(args, model, tokenizer, prefix="", do_test=False):
     ner_cor = 0 
     ner_tot_pred = 0
     ner_ori_cor = 0
-
+    tot_output_results = defaultdict(list)
     if not args.eval_unidirect:     # eval_unidrect is for ablation study
+        # print (len(scores))
         for example_index, pair_dict in sorted(scores.items(), key=lambda x:x[0]):  
             visited  = set([])
             sentence_results = []
@@ -843,7 +847,6 @@ def evaluate(args, model, tokenizer, prefix="", do_test=False):
 
                 pred_label = label_list[item[3]]
 
-                output_preds.append((m1, m2, pred_label))
 
                 if not overlap:
                     no_overlap.append(item)
@@ -868,6 +871,7 @@ def evaluate(args, model, tokenizer, prefix="", do_test=False):
                 if m2 not in pos2ner:
                     pos2ner[m2] = item[5]
 
+                output_preds.append((m1, m2, pred_label))
                 if pred_label in sym_labels:
                     if (example_index, (m1[0], m1[1], pos2ner[m1]), (m2[0], m2[1], pos2ner[m2]), pred_label) in golden_labels_withner  \
                             or (example_index,  (m2[0], m2[1], pos2ner[m2]), (m1[0], m1[1], pos2ner[m1]), pred_label) in golden_labels_withner:
@@ -875,7 +879,11 @@ def evaluate(args, model, tokenizer, prefix="", do_test=False):
                 else:  
                     if (example_index, (m1[0], m1[1], pos2ner[m1]), (m2[0], m2[1], pos2ner[m2]), pred_label) in golden_labels_withner:
                         cor_with_ner += 1      
-            
+
+            if do_test:
+                #output_w.write(json.dumps(output_preds) + '\n')
+                tot_output_results[example_index[0]].append((example_index[1],  output_preds))
+
             # refine NER results
             ner_results = list(global_predicted_ners[example_index])
             for i in range(len(ner_results)):
@@ -982,6 +990,10 @@ def evaluate(args, model, tokenizer, prefix="", do_test=False):
 
     evalTime = timeit.default_timer() - start_time
     logger.info("  Evaluation done in total %f secs (%f example per second)", evalTime,  len(global_predicted_ners) / evalTime)
+
+    if do_test:
+        output_w = open(os.path.join(args.output_dir, 'pred_results.json'), 'w')
+        json.dump(tot_output_results, output_w)
 
     ner_p = ner_cor / ner_tot_pred if ner_tot_pred > 0 else 0 
     ner_r = ner_cor / len(ner_golden_labels) 

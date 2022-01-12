@@ -132,7 +132,7 @@ if we use the flag `--use_typemarker` for the RE models, the results will be:
 | SciERC-TypeMarker | 69.9 | 52.5 | 40.9 |
 
 
-Since the Typemarker increase the performance of SciERC but decrease the performance of ACE05, we didn't use it in the paper.
+Since the Typemarker increase the performance on SciERC but decrease the performance on ACE05, we didn't use it in the paper.
 
 
 ## Citation
