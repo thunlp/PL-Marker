@@ -35,7 +35,7 @@ CUDA_VISIBLE_DEVICES=$GPU_ID  python3  run_re.py  --model_type bertsub  \
     --output_dir scire_models/scire-scibert-$seed  --overwrite_output_dir
 done;
 # Average the scores
-python3 sumup.py scire scire-bert
+python3 sumup.py scire scire-scibert
 
 
 # ACE04
