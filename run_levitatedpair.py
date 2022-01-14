@@ -273,7 +273,11 @@ class ACEDataset(Dataset):
                 # for x in sentence_relations:
                 #     w = (x[2],x[3],x[0],x[1])
                 #     if w not in pos2label:
-                #         pos2label[w] = label_map[x[4]] + len(label_map) - len(self.sym_labels)
+                #         if x[4] in self.sym_labels[1:]:
+                #             pos2label[w] = label_map[x[4]]  
+                #         else:
+                #             pos2label[w] = label_map[x[4]] + len(label_map) - len(self.sym_labels)
+
 
                 cur_ins = []
 
