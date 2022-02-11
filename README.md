@@ -48,7 +48,7 @@ Our experiments are based on three datasets: ACE04, ACE05, and SciERC. Please fi
 
 ### Input data format
 
-The input data format of the entity model is JSONL. Each line of the input file contains one document in the following format.
+The input data format for our models is JSONL. Each line of the input file contains one document in the following format.
 ```
 {
   # document ID (please make sure doc_key can be used to identify a certain document)
