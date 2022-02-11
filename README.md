@@ -6,6 +6,7 @@ Source code for [Pack Together: Entity and Relation Extraction with Levitated Ma
 * [Setup](#Setup)
   * [Install Dependencies](#Install-dependencies)
   * [Data Preprocessing](#Download-and-preprocess-the-datasets)
+  * [Data Format](#Input-data-format)
   * [Trained Models](#Trained-Models)
 * [Training Script](#Training-script)
 * [Quick Start](#Quick-start)
@@ -42,8 +43,42 @@ Our experiments are based on three datasets: ACE04, ACE05, and SciERC. Please fi
 * OntoNotes: We use `preprocess_ontonotes.py`  to preprocess the [OntoNote 5.0](https://catalog.ldc.upenn.edu/LDC2013T19).
 * Few-NERD: The dataseet can be downloaed in their [website](https://ningding97.github.io/fewnerd/)
 * ACE04/ACE05: We use the preprocessing code from [DyGIE repo](https://github.com/luanyi/DyGIE/tree/master/preprocessing). Please follow the instructions to preprocess the ACE05 and ACE04 datasets.
-* SciERC: The preprocessed SciERC dataset can be downloaded in their project [website](http://nlp.cs.washington.edu/sciIE/data/sciERC_processed.tar.gz).
+* SciERC: The preprocessed SciERC dataset can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1_u6pIe7Dw3Lqy4mF2m1UFqmKmGeM40zS?usp=sharing)/[Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/7dafc9a3d84d4151a755/).
 
+
+### Input data format
+
+The input data format of the entity model is JSONL. Each line of the input file contains one document in the following format.
+```
+{
+  # document ID (please make sure doc_key can be used to identify a certain document)
+  "doc_key": "CNN_ENG_20030306_083604.6",
+
+  # sentences in the document, each sentence is a list of tokens
+  "sentences": [
+    [...],
+    [...],
+    ["tens", "of", "thousands", "of", "college", ...],
+    ...
+  ],
+
+  # entities (boundaries and entity type) in each sentence
+  "ner": [
+    [...],
+    [...],
+    [[26, 26, "LOC"], [14, 14, "PER"], ...], #the boundary positions are indexed in the document level
+    ...,
+  ],
+
+  # relations (two spans and relation type) in each sentence
+  "relations": [
+    [...],
+    [...],
+    [[14, 14, 10, 10, "ORG-AFF"], [14, 14, 12, 13, "ORG-AFF"], ...],
+    ...
+  ]
+}
+```
 
 ### Trained Models
 We release our trained NER models and RE models on ACE05 and SciERC datasets on [Google Drive](https://drive.google.com/drive/folders/1k_Nt_DeKRKIRd2sM766j538b1JhYm4-H?usp=sharing)/[Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/). And we release our trained models on flat NER datasets on  [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/5e4a117bc0e5407b9cee/).
