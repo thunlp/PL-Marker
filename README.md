@@ -148,26 +148,12 @@ CUDA_VISIBLE_DEVICES=0  python3  run_re.py  --model_type bertsub  \
     --learning_rate 2e-5  --num_train_epochs 10  --per_gpu_train_batch_size  8  --per_gpu_eval_batch_size 16  --gradient_accumulation_steps 1  \
     --max_seq_length 256  --max_pair_length 16  --save_steps 2500  \
     --do_eval  --evaluate_during_training   --eval_all_checkpoints  --eval_logsoftmax  \
-    --fp16  --lminit   \
+    --fp16   \
     --test_file sciner_models/sciner-scibert/ent_pred_test.json  \
     --use_ner_results \
     --output_dir scire_models/scire-scibert
 ```
 Here,  `--use_ner_results` denotes using the original entity type predicted by NER models.
-
-
-## TypeMarker
-if we use the flag `--use_typemarker` for the RE models, the results will be:
-
-| Model | Ent | Rel | Rel+ |
-| :-----| :----: | :----: | :----: |
-| ACE05-UnTypeMarker (in paper) | 89.7 | 68.8 | 66.3 |
-| ACE05-TypeMarker | 89.7 | 67.5 | 65.2 |
-| SciERC-UnTypeMarker (in paper) | 69.9 | 52.0 | 40.6 |
-| SciERC-TypeMarker | 69.9 | 52.5 | 40.9 |
-
-
-Since the Typemarker increase the performance on SciERC but decrease the performance on ACE05, we didn't use it in the paper.
 
 
 ## Citation
@@ -176,7 +162,7 @@ If you use our code in your research, please cite our work:
 @article{ye2021plmarker,
   author    = {Deming Ye and Yankai Lin and Maosong Sun},
   title     = {Pack Together: Entity and Relation Extraction with Levitated Marker},
-  journal   = {arXiv Preprint},
-  year={2021}
+  booktitle={Proceedings of ACL 2022},
+  year={2022}
 }
 ```
