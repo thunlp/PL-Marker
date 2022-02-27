@@ -159,10 +159,10 @@ Here,  `--use_ner_results` denotes using the original entity type predicted by N
 ## Citation
 If you use our code in your research, please cite our work:
 ```bibtex
-@article{ye2022pelt,
+@article{ye2022plmarker,
   author    = {Deming Ye and Yankai Lin and Maosong Sun},
   title     = {Pack Together: Entity and Relation Extraction with Levitated Marker},
-  booktitle={Proceedings of ACL 2022},
-  year={2022}
+  booktitle = {Proceedings of ACL 2022},
+  year      = {2022}
 }
 ```
