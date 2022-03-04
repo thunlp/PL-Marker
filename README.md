@@ -1,5 +1,5 @@
 # PL-Marker
-Source code of the ACL 2022 paper "[Pack Together: Entity and Relation Extraction with Levitated Marker](https://arxiv.org/pdf/2109.06067.pdf)".
+Source code of the ACL 2022 paper "[Packed Levitated Marker for Entity and Relation Extraction](https://arxiv.org/pdf/2109.06067.pdf)".
 
 ## Quick links
 * [Overview](#Overview)
