@@ -10,7 +10,7 @@ Source code of the ACL 2022 paper "[Packed Levitated Marker for Entity and Relat
   * [Trained Models](#Trained-Models)
 * [Training Script](#Training-script)
 * [Quick Start](#Quick-start)
-* [Use TypeMarker](#TypeMarker)
+* [Conll03 with Dev](#Conll03-with-dev)
 * [Citation](#Citation)
 
 
@@ -154,6 +154,14 @@ CUDA_VISIBLE_DEVICES=0  python3  run_re.py  --model_type bertsub  \
     --output_dir scire_models/scire-scibert
 ```
 Here,  `--use_ner_results` denotes using the original entity type predicted by NER models.
+
+
+## Conll03 with dev
+
+| Model | Original | Train with dev set |
+| :-----| :----: | :----: |
+| SeqTagger | 93.6 | 93.9 |
+| PL-Marker | 94.0 | 94.2 |
 
 
 ## Citation
