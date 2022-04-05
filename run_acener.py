@@ -1073,6 +1073,7 @@ def main():
     if args.local_rank in [-1, 0]:
         output_eval_file = os.path.join(args.output_dir, "results.json")
         json.dump(results, open(output_eval_file, "w"))
+        logger.info("Result: %s", json.dumps(results))
 
 if __name__ == "__main__":
     main()
