@@ -169,9 +169,18 @@ Here,  `--use_ner_results` denotes using the original entity type predicted by N
 If you use our code in your research, please cite our work:
 ```bibtex
 @inproceedings{ye2022plmarker,
-  author    = {Deming Ye and Yankai Lin and Peng Li and Maosong Sun},
+  author    = {Deming Ye and
+               Yankai Lin and
+               Maosong Sun},
   title     = {Pack Together: Entity and Relation Extraction with Levitated Marker},
-  booktitle = {Proceedings of ACL 2022},
-  year      = {2022}
+  journal   = {CoRR},
+  volume    = {abs/2109.06067},
+  year      = {2021},
+  url       = {https://arxiv.org/abs/2109.06067},
+  eprinttype = {arXiv},
+  eprint    = {2109.06067},
+  timestamp = {Tue, 21 Sep 2021 17:46:04 +0200},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-2109-06067.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 ```
