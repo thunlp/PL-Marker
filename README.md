@@ -171,16 +171,21 @@ If you use our code in your research, please cite our work:
 @inproceedings{ye2022plmarker,
   author    = {Deming Ye and
                Yankai Lin and
+               Peng Li and
                Maosong Sun},
-  title     = {Pack Together: Entity and Relation Extraction with Levitated Marker},
-  journal   = {CoRR},
-  volume    = {abs/2109.06067},
-  year      = {2021},
-  url       = {https://arxiv.org/abs/2109.06067},
-  eprinttype = {arXiv},
-  eprint    = {2109.06067},
-  timestamp = {Tue, 21 Sep 2021 17:46:04 +0200},
-  biburl    = {https://dblp.org/rec/journals/corr/abs-2109-06067.bib},
+  editor    = {Smaranda Muresan and
+               Preslav Nakov and
+               Aline Villavicencio},
+  title     = {Packed Levitated Marker for Entity and Relation Extraction},
+  booktitle = {Proceedings of the 60th Annual Meeting of the Association for Computational
+               Linguistics (Volume 1: Long Papers), {ACL} 2022, Dublin, Ireland,
+               May 22-27, 2022},
+  pages     = {4904--4917},
+  publisher = {Association for Computational Linguistics},
+  year      = {2022},
+  url       = {https://aclanthology.org/2022.acl-long.337},
+  timestamp = {Wed, 18 May 2022 15:21:43 +0200},
+  biburl    = {https://dblp.org/rec/conf/acl/YeL0S22.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 ```
