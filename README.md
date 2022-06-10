@@ -34,7 +34,7 @@ The code is based on huggaface's [transformers](https://github.com/huggingface/t
 Install dependencies and [apex](https://github.com/NVIDIA/apex):
 ```
 pip3 install -r requirement.txt
-pip3 install --editable transformers
+pip3 install --editable ./transformers
 ```
 
 ### Download and preprocess the datasets
