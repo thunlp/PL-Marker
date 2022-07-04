@@ -1,4 +1,4 @@
 torch
 tqdm
 tensorboardX
-seqeval=1.2.2
+seqeval==1.2.2
