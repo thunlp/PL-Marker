@@ -762,7 +762,7 @@ def evaluate(args, model, tokenizer, prefix="", do_test=False):
 
     logger.info("Result: %s", json.dumps(results))
 
-    if args.output_results and (do_test or not args.do_train):
+    if args.output_results:
         f = open(eval_dataset.file_path)
         if do_test:
             output_w = open(os.path.join(args.output_dir, 'ent_pred_test.json'), 'w')  
