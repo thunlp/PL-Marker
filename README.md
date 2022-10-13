@@ -139,8 +139,7 @@ CUDA_VISIBLE_DEVICES=0  python3  run_acener.py  --model_type bertspanmarker  \
     --output_dir sciner_models/sciner-scibert  --overwrite_output_dir  --output_results
 ```
 
-
-Evaluate the RE model:
+We need the ner result `ent_pred_test.json` from the NER model with `--output_results`. Then we evaluate the RE model:
 ```
 CUDA_VISIBLE_DEVICES=0  python3  run_re.py  --model_type bertsub  \
     --model_name_or_path  ../bert_models/scibert-uncased  --do_lower_case  \
