@@ -1,6 +1,8 @@
 # PL-Marker
 Source code of the ACL 2022 paper "[Packed Levitated Marker for Entity and Relation Extraction](https://arxiv.org/pdf/2109.06067.pdf)".
 
+[@tomaarsen](https://github.com/tomaarsen) develops a feasible and powerful library, [SpanMarker](https://github.com/tomaarsen/SpanMarkerNER), to apply PL-Marker to named entity recognition. SpanMarker takes advantage of the valuable functionality of 🤗 [Transformers](https://github.com/huggingface/transformers/) library, thus it can deal with a series of NER datasets with various encoders. Thanks to [@tomaarsen](https://github.com/tomaarsen) for his insightful work!
+
 ## Quick links
 * [Overview](#Overview)
 * [Setup](#Setup)
